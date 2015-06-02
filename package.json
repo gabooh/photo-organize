@@ -1,0 +1,26 @@
+{
+  "name": "photo-organize",
+  "version": "1.0.0",
+  "description": "Script to organize photos into subdirectories based on exif date.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gabooh/photo-organize.git"
+  },
+  "author": "Gaël Beaudoin",
+  "license": "GPL-2.0",
+  "bugs": {
+    "url": "https://github.com/gabooh/photo-organize/issues"
+  },
+  "homepage": "https://github.com/gabooh/photo-organize#readme",
+  "dependencies": {
+    "commander": "^2.8.1",
+    "exif": "^0.4.0",
+    "lodash": "^3.9.3",
+    "moment": "^2.10.3",
+    "q": "^1.4.1"
+  }
+}
