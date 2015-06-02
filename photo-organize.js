@@ -21,7 +21,7 @@ if (program.args.length > 1) {
 } else if (program.args.length == 1) {
   directoryName = program.args[0];
 } else {
-  directoryName = __dirname;
+  directoryName = process.cwd();
 }
 
 console.log(`Processing directory '${directoryName}'`);
