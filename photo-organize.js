@@ -2,15 +2,22 @@
 
 'use strict';
 
-var program = require('commander');
-var fs = require('fs');
-var _ = require('lodash');
-var exif = require('exif').ExifImage;
-var moment = require('moment');
-var q = require('q');
+const program = require('commander');
+const fs = require('fs');
+const _ = require('lodash');
+const exif = require('exif').ExifImage;
+const moment = require('moment');
+const q = require('q');
 
-program.version('1.0.0')
-  .usage('<directory>');
+const validExtensions = ['jpg', 'jpeg', 'mp4'];
+const morningLimit = 5; // 5am;
+
+var optionDry = false;
+
+program
+  .version('1.1')
+  .usage('<directory> [options]')
+  .option('-d, --dry', 'do not perform move', setDryOption);
 
 program.parse(process.argv);
 
@@ -25,7 +32,13 @@ if (program.args.length > 1) {
 }
 
 console.log(`Processing directory '${directoryName}'`);
+
 processDirectory(directoryName);
+
+function setDryOption() {
+  optionDry = true;
+  return true;
+}
 
 /**
  * Process a directory : list files, get timestamp and move them to appropriate subdirectory.
@@ -49,7 +62,7 @@ function processDirectory(directoryName) {
   let files = fs.readdirSync(directoryName);
 
   let date = null;
-  _.forEach(_.filter(files, validFileTypes), function (file) {
+  _.forEach(_.filter(files, validFile), function (file) {
     getDateFromExif(file)
       .then(function (exifDate) {
         if (exifDate != null && exifDate.isValid()) {
@@ -58,9 +71,13 @@ function processDirectory(directoryName) {
           date = moment(fs.statSync(directoryName + file).mtime);
         }
 
+        // we remove X hours so that dates in the morning belongs to the previous calendar day
+        date.subtract(morningLimit, 'hours');
         let subdirectoryName = date.format('YYYY_MM_DD') + '/';
-        createDirectory(directoryName + subdirectoryName);
-        fs.renameSync(directoryName + file, directoryName + subdirectoryName + file);
+        if (!optionDry) {
+          createDirectory(directoryName + subdirectoryName);
+          fs.renameSync(directoryName + file, directoryName + subdirectoryName + file);
+        }
 
         console.log(`${directoryName + file} -> ${directoryName + subdirectoryName + file}`);
       })
@@ -91,8 +108,7 @@ function getDateFromExif(file) {
         }
         deferred.resolve(moment(dateString, 'YYYY:MM:DD HH:mm:ss'));
       }
-    )
-    ;
+    );
   } catch (err) {
     deferred.reject(`Error: ${err}`);
   }
@@ -110,8 +126,11 @@ function createDirectory(directoryName) {
   }
 }
 
-function validFileTypes(file) {
-  return _.endsWith(file.toLowerCase(), '.jpg')
-    || _.endsWith(file.toLowerCase(), '.jpeg')
-    || _.endsWith(file.toLowerCase(), '.mp4');
+/**
+ * @param file the file to process
+ * @return true if the file is valid for processing, false otherwise
+ */
+function validFile(file) {
+  let extension = file.substring(file.lastIndexOf('.') + 1); //+ 1 because we do not want the dot
+  return _.contains(validExtensions, extension.toLowerCase());
 }
