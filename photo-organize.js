@@ -42,7 +42,7 @@ function setDryOption() {
 
 /**
  * Process a directory : list files, get timestamp and move them to appropriate subdirectory.
- * @param directoryName
+ * @param directoryName the directory to process
  */
 function processDirectory(directoryName) {
   try {
