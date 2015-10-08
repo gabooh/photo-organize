@@ -1,6 +1,6 @@
 {
   "name": "photo-organize",
-  "version": "1.1",
+  "version": "1.1.0",
   "description": "Organize your photographies into subdirectories based on exif date.",
   "main": "index.js",
   "scripts": {
