@@ -15,7 +15,7 @@ const morningLimit = 5; // 5am;
 var optionDry = false;
 
 program
-  .version('1.1.0')
+  .version('1.1.1')
   .usage('<directory> [options]')
   .option('-d, --dry', 'do not perform move', setDryOption);
 
