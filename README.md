@@ -18,5 +18,5 @@ The __--dry__ option logs the changes without applying them.
 
 # Sources
 
-https://github.com/gabooh/image-proxy
+https://github.com/gabooh/photo-organize
 
