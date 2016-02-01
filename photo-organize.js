@@ -128,9 +128,9 @@ function createDirectory(directoryName) {
 
 /**
  * @param file the file to process
- * @return true if the file is valid for processing, false otherwise
+ * @return boolean true if the file is valid for processing, false otherwise
  */
 function validFile(file) {
   let extension = file.substring(file.lastIndexOf('.') + 1); //+ 1 because we do not want the dot
-  return _.contains(validExtensions, extension.toLowerCase());
+  return _.includes(validExtensions, extension.toLowerCase());
 }
