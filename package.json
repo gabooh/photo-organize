@@ -1,7 +1,13 @@
 {
   "name": "photo-organize",
-  "version": "1.0.0",
-  "description": "Script to organize photos into subdirectories based on exif date.",
+  "version": "1.1.1",
+  "description": "Organize your photographies into subdirectories based on exif date.",
+  "keywords": [
+    "photo",
+    "sort",
+    "organize",
+    "exif"
+  ],
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -23,6 +29,7 @@
     "moment": "^2.10.3",
     "q": "^1.4.1"
   },
+  "bin": "./photo-organize.js",
   "engines": {
     "node": "4.2.6"
   }

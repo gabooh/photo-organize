@@ -15,7 +15,7 @@ const morningLimit = 5; // 5am;
 var optionDry = false;
 
 program
-  .version('1.1')
+  .version('1.1.1')
   .usage('<directory> [options]')
   .option('-d, --dry', 'do not perform move', setDryOption);
 
@@ -42,7 +42,7 @@ function setDryOption() {
 
 /**
  * Process a directory : list files, get timestamp and move them to appropriate subdirectory.
- * @param directoryName
+ * @param directoryName the directory to process
  */
 function processDirectory(directoryName) {
   try {
