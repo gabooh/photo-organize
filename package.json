@@ -23,14 +23,14 @@
   },
   "homepage": "https://github.com/gabooh/photo-organize#readme",
   "dependencies": {
-    "commander": "^2.8.1",
-    "exif": "^0.5",
-    "lodash": "^4.1",
-    "moment": "^2.10.3",
-    "q": "^1.4.1"
+    "commander": "^2.19.0",
+    "exif": "^0.6.0",
+    "lodash": "^4.17.11",
+    "moment": "^2.24.0",
+    "q": "^1.5.1"
   },
   "bin": "./photo-organize.js",
   "engines": {
-    "node": "4.2.6"
+    "node": "10.5"
   }
 }
