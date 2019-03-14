@@ -22,7 +22,7 @@ let directoryName = null
 if (program.args.length > 1) {
   console.log('Too many arguments.')
   process.exit(1)
-} else if (program.args.length == 1) {
+} else if (program.args.length === 1) {
   directoryName = program.args[0]
 } else {
   directoryName = process.cwd()
