@@ -32,5 +32,8 @@
   "bin": "./photo-organize.js",
   "engines": {
     "node": "10.5"
+  },
+  "devDependencies": {
+    "standard": "^12.0.1"
   }
 }
