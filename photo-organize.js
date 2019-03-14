@@ -30,6 +30,10 @@ if (program.args.length > 1) {
 
 console.log(`Processing directory '${directoryName}'`)
 
+if (optionDry) {
+  console.info('Dry run : no changes will be made.')
+}
+
 processDirectory(directoryName)
 
 function setDryOption () {
