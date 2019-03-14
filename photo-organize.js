@@ -3,18 +3,26 @@
 'use strict'
 
 const program = require('commander')
+const path = require('path')
 const fs = require('fs')
 const _ = require('lodash')
 const exif = require('exif').ExifImage
 const moment = require('moment')
-const q = require('q')
+const perf = require('execution-time')()
+// const q = require('q')
 
 const validExtensions = ['jpg', 'jpeg', 'mp4']
 const morningLimit = 5 // 5am;
 
 let optionDry = false
 
-program.version('1.1.1').usage('<directory> [options]').option('-d, --dry', 'do not perform move', setDryOption)
+// setup execution time reporting
+perf.start()
+process.on('exit', () => {
+  console.log(perf.stop().words)
+})
+
+program.version('1.2').usage('<directory> [options]').option('-d, --dry', 'do not perform move', setDryOption)
 
 program.parse(process.argv)
 
@@ -28,24 +36,24 @@ if (program.args.length > 1) {
   directoryName = process.cwd()
 }
 
-console.log(`Processing directory '${directoryName}'`)
-
 if (optionDry) {
   console.info('Dry run : no changes will be made.')
 }
 
-processDirectory(directoryName)
-
-function setDryOption () {
-  optionDry = true
-  return true
+if (!_.endsWith(directoryName, '/')) {
+  directoryName += '/'
 }
+
+processDirectory(directoryName).catch(error => {
+  console.error(error)
+})
 
 /**
  * Process a directory : list files, get timestamp and move them to appropriate subdirectory.
- * @param directoryName the directory to process
  */
-function processDirectory (directoryName) {
+async function processDirectory () {
+  console.log(`Processing directory '${directoryName}'`)
+
   try {
     if (!fs.statSync(directoryName).isDirectory()) {
       console.error(`'${directoryName}' is not a directory`)
@@ -56,66 +64,68 @@ function processDirectory (directoryName) {
     process.exit(1)
   }
 
-  if (!_.endsWith(directoryName, '/')) {
-    directoryName += '/'
-  }
-
   let files = fs.readdirSync(directoryName)
 
-  let date = null
-  _.forEach(_.filter(files, validFile), function (file) {
-    getDateFromExif(file).then(function (exifDate) {
+  for (const file of files) {
+    if (!validFile(file)) {
+      return
+    }
+
+    let date = null
+    if (path.extname(file) === '.mp4') {
+      // exif doesn't support mp4 files
+      date = moment(fs.statSync(directoryName + file).mtime)
+    } else {
+      const exifDate = await getDateFromExif(file)
       if (exifDate != null && exifDate.isValid()) {
         date = exifDate
-      } else {
-        date = moment(fs.statSync(directoryName + file).mtime)
       }
+    }
 
-      // we remove X hours so that dates in the morning belongs to the previous calendar day
-      date.subtract(morningLimit, 'hours')
-      let subdirectoryName = date.format('YYYY_MM_DD') + '/'
-      if (!optionDry) {
-        createDirectory(directoryName + subdirectoryName)
-        fs.renameSync(directoryName + file,
-          directoryName + subdirectoryName + file)
-      }
+    if (date === null) {
+      date = moment(fs.statSync(directoryName + file).mtime)
+    }
 
-      console.log(
-        `${directoryName + file} -> ${directoryName + subdirectoryName +
-        file}`)
-    }).then(null, function (err) {
-      console.trace(err)
-    })
-  })
+    // we remove X hours so that dates in the morning belongs to the previous calendar day
+    date.subtract(morningLimit, 'hours')
+    let subdirectoryName = date.format('YYYY_MM_DD') + '/'
+    if (!optionDry) {
+      createDirectory(directoryName + subdirectoryName)
+      fs.renameSync(directoryName + file,
+        directoryName + subdirectoryName + file)
+    }
+
+    console.log(
+      `${directoryName + file} -> ${directoryName + subdirectoryName +
+      file}`)
+  }
+
 }
 
 /**
  * Get the date of the picture from the exif data
  * @param file the file to read
- * @return {promise|*|Q.promise}
+ * @return {Promise}
  */
 function getDateFromExif (file) {
-  let deferred = q.defer()
-  try {
-    new exif({ image: directoryName + file }, function (error, exifData) {
-        if (error) {
-          deferred.resolve(null)
+  return new Promise((resolve) => {
+    new exif({ image: directoryName + file }, (err, exifData) => {
+        if (err) {
+          console.error(err)
+          resolve(null)
           return
         }
+
         let dateString
         if (exifData['exif']['DateTimeOriginal'] !== undefined) {
           dateString = exifData['exif']['DateTimeOriginal']
         } else if (exifData['exif']['DateTime'] !== undefined) {
           dateString = exifData['exif']['DateTime']
         }
-        deferred.resolve(moment(dateString, 'YYYY:MM:DD HH:mm:ss'))
+        resolve(moment(dateString, 'YYYY:MM:DD HH:mm:ss'))
       }
     )
-  } catch (err) {
-    deferred.reject(`Error: ${err}`)
-  }
-
-  return deferred.promise
+  })
 }
 
 /**
@@ -135,4 +145,9 @@ function createDirectory (directoryName) {
 function validFile (file) {
   let extension = file.substring(file.lastIndexOf('.') + 1) // + 1 because we do not want the dot
   return _.includes(validExtensions, extension.toLowerCase())
+}
+
+function setDryOption () {
+  optionDry = true
+  return true
 }
