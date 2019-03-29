@@ -30,6 +30,13 @@
     "moment": "^2.24.0"
   },
   "bin": "./photo-organize.js",
+  "files": [
+    "package.json",
+    "package-lock.json",
+    "LICENSE",
+    "photo-organize.js",
+    "README.md"
+  ],
   "engines": {
     "node": "10"
   },
