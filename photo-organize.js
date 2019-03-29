@@ -3,13 +3,11 @@
 'use strict'
 
 const program = require('commander')
-const path = require('path')
 const fs = require('fs')
 const _ = require('lodash')
-const exif = require('exif').ExifImage
+const exiftool = require('exiftool-vendored').exiftool
 const moment = require('moment')
 const perf = require('execution-time')()
-// const q = require('q')
 
 const validExtensions = ['jpg', 'jpeg', 'mp4']
 const morningLimit = 5 // 5am;
@@ -44,9 +42,13 @@ if (!_.endsWith(directoryName, '/')) {
   directoryName += '/'
 }
 
-processDirectory(directoryName).catch(error => {
-  console.error(error)
-})
+processDirectory(directoryName)
+  .catch(error => {
+    console.error(error)
+  }).finally(() => {
+    return exiftool.end()
+  }
+)
 
 /**
  * Process a directory : list files, get timestamp and move them to appropriate subdirectory.
@@ -71,16 +73,7 @@ async function processDirectory () {
       return
     }
 
-    let date = null
-    if (path.extname(file) === '.mp4') {
-      // exif doesn't support mp4 files
-      date = moment(fs.statSync(directoryName + file).mtime)
-    } else {
-      const exifDate = await getDateFromExif(file)
-      if (exifDate != null && exifDate.isValid()) {
-        date = exifDate
-      }
-    }
+    let date = await readExifDate(file)
 
     if (date === null) {
       date = moment(fs.statSync(directoryName + file).mtime)
@@ -103,28 +96,35 @@ async function processDirectory () {
 }
 
 /**
- * Get the date of the picture from the exif data
- * @param file the file to read
- * @return {Promise}
+ *
+ * @param file the media file to read
+ * @returns {Promise<Date>}
  */
-function getDateFromExif (file) {
-  return new Promise((resolve) => {
-    new exif({ image: directoryName + file }, (err, exifData) => {
-        if (err) {
-          console.error(err)
-          resolve(null)
-          return
-        }
+function readExifDate (file) {
+  return new Promise((resolve, reject) => {
+    exiftool
+      .read(directoryName + file)
+      .then((tags) => {
+          if (tags.errors.length) {
+            console.error(`error reading ${file} : ${tags.errors}`)
+            resolve(null)
+            return
+          }
 
-        let dateString
-        if (exifData['exif']['DateTimeOriginal'] !== undefined) {
-          dateString = exifData['exif']['DateTimeOriginal']
-        } else if (exifData['exif']['DateTime'] !== undefined) {
-          dateString = exifData['exif']['DateTime']
+          if (tags.CreateDate) {
+            resolve(moment(tags.CreateDate.toDate()))
+          } else if (tags.ModifyDate) {
+            resolve(moment(tags.ModifyDate.toDate()))
+          } else {
+            console.error(`no date found in exif tags for file ${file}`)
+            resolve(null)
+          }
         }
-        resolve(moment(dateString, 'YYYY:MM:DD HH:mm:ss'))
-      }
-    )
+      )
+      .catch(err => {
+        console.error(`Error reading tag for ${file} `, err)
+        reject(err)
+      })
   })
 }
 
