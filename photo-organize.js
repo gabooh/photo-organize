@@ -70,7 +70,7 @@ async function processDirectory () {
 
   for (const file of files) {
     if (!validFile(file)) {
-      return
+      continue
     }
 
     let date = await readExifDate(file)
