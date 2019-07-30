@@ -91,7 +91,7 @@ async function processDirectory () {
         directoryName + subdirectoryName + file)
     }
 
-    console.log(`${directoryName + file} -> ${directoryName + subdirectoryName + file}`)
+    console.log(`${file} -> ${subdirectoryName + file}`)
     count++
   }
 
