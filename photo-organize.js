@@ -144,7 +144,8 @@ function createDirectory (directoryName) {
  */
 function validFile (file) {
   let extension = file.substring(file.lastIndexOf('.') + 1) // + 1 because we do not want the dot
-  return _.includes(validExtensions, extension.toLowerCase())
+  // ignore dot (hidden) files and filter by extensions
+  return file.startsWith('.') && _.includes(validExtensions, extension.toLowerCase())
 }
 
 function setDryOption () {
