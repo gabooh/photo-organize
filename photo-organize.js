@@ -66,10 +66,13 @@ async function processDirectory () {
     process.exit(1)
   }
 
+  let count = 0
+  let countIgnored = 0
   let files = fs.readdirSync(directoryName)
 
   for (const file of files) {
     if (!validFile(file)) {
+      countIgnored++
       continue
     }
 
@@ -88,11 +91,11 @@ async function processDirectory () {
         directoryName + subdirectoryName + file)
     }
 
-    console.log(
-      `${directoryName + file} -> ${directoryName + subdirectoryName +
-      file}`)
+    console.log(`${directoryName + file} -> ${directoryName + subdirectoryName + file}`)
+    count++
   }
 
+  console.log(`Processed ${count} file(s) in ${directoryName}, plus ${countIgnored} ignored.`)
 }
 
 /**
