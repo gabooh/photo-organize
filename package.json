@@ -1,6 +1,7 @@
 {
   "name": "photo-organize",
-  "version": "1.3.0",
+  "version": "1.4.0",
+  "type": "module",
   "description": "Organize your photographs into subdirectories based on exif date.",
   "keywords": [
     "photo",
@@ -23,11 +24,9 @@
   },
   "homepage": "https://github.com/gabooh/photo-organize#readme",
   "dependencies": {
-    "commander": "^2.20.0",
-    "execution-time": "^1.3.0",
-    "exiftool-vendored": "^8.19.0",
-    "lodash": "^4.17.15",
-    "moment": "^2.24.0"
+    "commander": "^8.3.0",
+    "date-fns": "^2.28.0",
+    "exiftool-vendored": "^15.10.1"
   },
   "bin": "./photo-organize.js",
   "files": [
@@ -41,6 +40,6 @@
     "node": "12"
   },
   "devDependencies": {
-    "standard": "^13.1.0"
+    "standard": "^16.0.4"
   }
 }

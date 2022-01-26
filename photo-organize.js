@@ -1,27 +1,24 @@
 #!/usr/bin/env node
 
-'use strict'
+import fs from 'fs'
+import {extname} from 'path'
 
-const program = require('commander')
-const fs = require('fs')
-const _ = require('lodash')
-const exiftool = require('exiftool-vendored').exiftool
-const moment = require('moment')
-const perf = require('execution-time')()
+import { format, subHours } from 'date-fns'
+import { program } from 'commander'
+import { exiftool } from 'exiftool-vendored'
 
-const validExtensions = ['jpg', 'jpeg', 'mp4']
+const validExtensions = ['.jpg', '.jpeg', '.mp4']
 const morningLimit = 5 // 5am;
 
 let optionDry = false
 
 // setup execution time reporting
-perf.start()
+console.time('execution')
 process.on('exit', () => {
-  console.log(perf.stop().words)
+  console.timeEnd('execution')
 })
 
-program.version('1.2').usage('<directory> [options]').option('-d, --dry', 'do not perform move', setDryOption)
-
+program.version('1.4').usage('<directory> [options]').option('-d, --dry', 'do not perform move', setDryOption)
 program.parse(process.argv)
 
 let directoryName = null
@@ -38,7 +35,7 @@ if (optionDry) {
   console.info('Dry run : no changes will be made.')
 }
 
-if (!_.endsWith(directoryName, '/')) {
+if (!directoryName.endsWith('/')) {
   directoryName += '/'
 }
 
@@ -68,7 +65,7 @@ async function processDirectory () {
 
   let count = 0
   let countIgnored = 0
-  let files = fs.readdirSync(directoryName)
+  const files = fs.readdirSync(directoryName)
 
   for (const file of files) {
     if (!validFile(file)) {
@@ -79,12 +76,12 @@ async function processDirectory () {
     let date = await readExifDate(file)
 
     if (date === null) {
-      date = moment(fs.statSync(directoryName + file).mtime)
+      date = fs.statSync(directoryName + file).mtime
     }
 
     // we remove X hours so that dates in the morning belongs to the previous calendar day
-    date.subtract(morningLimit, 'hours')
-    let subdirectoryName = date.format('YYYY_MM_DD') + '/'
+    subHours(date, morningLimit)
+    const subdirectoryName = format(date, 'yyyy_MM_dd') + '/'
     if (!optionDry) {
       createDirectory(directoryName + subdirectoryName)
       fs.renameSync(directoryName + file,
@@ -115,9 +112,9 @@ function readExifDate (file) {
           }
 
           if (tags.CreateDate) {
-            resolve(moment(tags.CreateDate.toDate()))
+            resolve(tags.CreateDate.toDate())
           } else if (tags.ModifyDate) {
-            resolve(moment(tags.ModifyDate.toDate()))
+            resolve(tags.ModifyDate.toDate())
           } else {
             console.error(`no date found in exif tags for file ${file}`)
             resolve(null)
@@ -142,13 +139,24 @@ function createDirectory (directoryName) {
 }
 
 /**
+ * Checks if a file can be processed.
+ * dot files are ignored and check files against a list of valid extensions
+ *
  * @param file the file to process
  * @return boolean true if the file is valid for processing, false otherwise
  */
 function validFile (file) {
-  let extension = file.substring(file.lastIndexOf('.') + 1) // + 1 because we do not want the dot
-  // ignore dot (hidden) files and filter by extensions
-  return !file.startsWith('.') && _.includes(validExtensions, extension.toLowerCase())
+  if (file.startsWith('.')) {
+    return false
+  }
+
+  const fileExtension = extname(file).toLowerCase()
+  for (const validExtension of validExtensions) {
+    if (fileExtension === validExtension) {
+      return true
+    }
+  }
+  return false
 }
 
 function setDryOption () {

@@ -16,6 +16,8 @@ For this particular purpose, a day starts at 5am. This way late evening pictures
 If the __directory__ is not provided, the current working directory is used.
 The __--dry__ option logs the changes without applying them.
 
+Tested with Node.js version from 12 to 17.
+
 # Sources
 
 https://github.com/gabooh/photo-organize
